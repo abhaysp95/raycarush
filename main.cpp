@@ -24,21 +24,33 @@ int main(void) {
 	Car car = {
 		.pos = { (float)screen_width / 2, screen_height * 0.9 },
 		.health = {
-			.pos = { screen_width * 0.05, screen_height * 0.1 },
+			.pos = { (float)screen_width / 2, screen_height * 0.88 },
 			.state = CurrentHealth::High,
 		}
 	};
 
 	while (!WindowShouldClose()) {
 		// update
-		if (IsKeyDown(KEY_RIGHT)) car.pos.x += 5.0f;
-		if (IsKeyDown(KEY_LEFT)) car.pos.x -= 5.0f;
-		if (IsKeyDown(KEY_UP)) car.pos.y -= 5.0f;
-		if (IsKeyDown(KEY_DOWN)) car.pos.y += 5.0f;
+		if (IsKeyDown(KEY_RIGHT)) {
+			car.pos.x += 5.0f;
+			car.health.pos.x += 5.0f;
+		}
+		if (IsKeyDown(KEY_LEFT)) {
+			car.pos.x -= 5.0f;
+			car.health.pos.x -= 5.0f;
+		}
+		if (IsKeyDown(KEY_UP)) {
+			car.pos.y -= 5.0f;
+			car.health.pos.y -= 5.0f;
+		}
+		if (IsKeyDown(KEY_DOWN)) {
+			car.pos.y += 5.0f;
+			car.health.pos.y += 5.0f;
+		}
 
 		BeginDrawing();
 		ClearBackground(DARKGRAY);
-		DrawText("Health: ", 190, 200, 20, PINK);
+		DrawRectangleV(car.health.pos, { 50, 10 }, GREEN);
 		DrawRectangleV(car.pos, { 50, 50 }, MAROON);
 		EndDrawing();
 	}
