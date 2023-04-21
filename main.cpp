@@ -17,7 +17,7 @@ int main(void) {
 	const int screen_height = 720;
 	const int screen_width = 1280;
 
-	InitWindow(screen_width, screen_height, "RayCarRush");
+	InitWindow(screen_width, screen_height, "RAYCARUSH");
 
 	SetTargetFPS(60);
 
@@ -50,8 +50,10 @@ int main(void) {
 
 		BeginDrawing();
 		ClearBackground(GOLD);
-		DrawLineEx({screen_width * 0.2, 0}, {screen_width * 0.2, screen_height}, 5.0, BLACK);
-		DrawLineEx({screen_width * 0.8, 0}, {screen_width * 0.8, screen_height}, 5.0, BLACK);
+		DrawText("RAYCARUSH", screen_width * 0.03, screen_height * 0.03, 25, DARKGRAY);
+		DrawLineEx({screen_width * 0.2, 0}, {screen_width * 0.2, screen_height}, 10.0, BLACK);
+		DrawLineEx({screen_width * 0.8, 0}, {screen_width * 0.8, screen_height}, 10.0, BLACK);
+		DrawRectangleV({screen_width * 0.2, 0}, { screen_width * 0.6, screen_height }, DARKGRAY);
 		DrawRectangleV(car.health.pos, { 50, 10 }, GREEN);
 		DrawRectangleV(car.pos, { 50, 50 }, MAROON);
 		EndDrawing();
