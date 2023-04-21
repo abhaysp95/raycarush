@@ -49,7 +49,9 @@ int main(void) {
 		}
 
 		BeginDrawing();
-		ClearBackground(DARKGRAY);
+		ClearBackground(GOLD);
+		DrawLineEx({screen_width * 0.2, 0}, {screen_width * 0.2, screen_height}, 5.0, BLACK);
+		DrawLineEx({screen_width * 0.8, 0}, {screen_width * 0.8, screen_height}, 5.0, BLACK);
 		DrawRectangleV(car.health.pos, { 50, 10 }, GREEN);
 		DrawRectangleV(car.pos, { 50, 50 }, MAROON);
 		EndDrawing();
