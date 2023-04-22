@@ -19,6 +19,10 @@ struct Car {
 	size_t score;
 };
 
+struct RoadStrip {
+	Rectangle body;
+};
+
 int main(void) {
 	const int screen_height = 720;
 	const int screen_width = 1280;
@@ -28,7 +32,7 @@ int main(void) {
 	SetTargetFPS(60);
 
 	Car car = {
-		.pos = { (float)screen_width / 2, screen_height * 0.9 },
+		.pos = { (float)screen_width / 2 - 25, screen_height * 0.9 },
 		.health = {
 			.pos = { (float)screen_width / 2 - 25, screen_height * 0.88 },
 			.state = CurrentHealth::High,
@@ -40,13 +44,14 @@ int main(void) {
 	char score_buf[32] = { '\0' };
 
 	// road strip
-	/* Rectangle road_strips[5] = {
-		{ (float)screen_width / 2 - 15, screen_height * 0.1, 30, 100 },
-		{ (float)screen_width / 2 - 15, screen_height * 0.3, 30, 100 },
-		{ (float)screen_width / 2 - 15, screen_height * 0.5, 30, 100 },
-		{ (float)screen_width / 2 - 15, screen_height * 0.7, 30, 100 },
-		{ (float)screen_width / 2 - 15, screen_height * 0.9, 30, 100 },
-	}; */
+	RoadStrip road_strips[5];
+	for (size_t i = 0; i < 5; i++) {
+		road_strips[i] = RoadStrip {
+			.body = { (float)screen_width / 2 - 15, (float)(screen_height * (0.1 + (float)i / 5)), 30, 100 },
+			// .pos = 0,
+		};
+	}
+
 
 	float strip_scrolling = 0.0;
 
@@ -73,9 +78,12 @@ int main(void) {
 		update_score(score_buf, car.score);
 
 		// make the strip move
-		strip_scrolling += 10;
-		if (strip_scrolling >= screen_height) {
-			strip_scrolling = 0;
+		// strip_scrolling += 10;
+		for (size_t i{}; i < 5; i++) {
+			road_strips[i].body.y += 10;
+			if (road_strips[i].body.y >= screen_height) {
+				road_strips[i].body.y = 0;
+			}
 		}
 
 		BeginDrawing();
@@ -93,11 +101,11 @@ int main(void) {
 		DrawRectangleV({screen_width * 0.2, 0}, { screen_width * 0.6, screen_height }, DARKGRAY);
 
 		// DrawRectangleRec({ (float)screen_width / 2 - 15, screen_height * 0.9, 30, 100 }, WHITE);
-		/* for (size_t i{}; i < 5; i++) {
-			DrawRectangleRec(road_strips[i], WHITE);
-		} */
+		for (size_t i{}; i < 5; i++) {
+			DrawRectangleRec(road_strips[i].body, WHITE);
+		}
 
-		DrawRectangleRec({ (float)screen_width / 2 - 15, strip_scrolling, 30,  100}, WHITE);
+		// DrawRectangleRec({ (float)screen_width / 2 - 15, strip_scrolling, 30,  100}, WHITE);
 
 
 		// draw car & health
