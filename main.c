@@ -9,7 +9,7 @@
 
 void update_score(char *str, size_t score);
 
-typedef enum CurrentHealth { Low, Medium, High } CurrentHealth;
+typedef enum CurrentHealth { Dead, Low, Medium, High } CurrentHealth;
 typedef enum CarType { Player, Enemy } CarType;
 
 typedef struct Health {
@@ -181,7 +181,34 @@ int main(void) {
 		}
 
 		framecount++;
-		printf("framecount: %d\n", framecount);
+
+		// enemy collision
+		bool collision = false;
+		for (size_t i = 0; i < MAXENEMYCARSZ; i++) {
+			if ((player.body.x <= enemies[i].body.x + enemies[i].body.width)
+					|| (player.body.x + player.body.width >= enemies[i].body.x)
+					|| (player.body.y <= enemies[i].body.y + enemies[i].body.width)
+					|| (player.body.y + player.body.width >= enemies[i].body.y)) {
+				collision = true;
+				break;
+			}
+		}
+
+		if (collision) {
+			switch (player.health.state) {
+				case Low:
+					player.health.state = Dead;
+					break;
+				case Medium:
+					player.health.state = Low;
+					break;
+				case High:
+					player.health.state = Medium;
+					break;
+				default:  // shouldn't reach here
+					break;
+			}
+		}
 
 		BeginDrawing();
 		ClearBackground(GOLD);
@@ -205,7 +232,19 @@ int main(void) {
 
 
 		// draw car & health
-		DrawRectangleRec(player.health.body, GREEN);
+		switch (player.health.state) {
+			case Low:
+				DrawRectangleRec(player.health.body, RED);
+				break;
+			case Medium:
+				DrawRectangleRec(player.health.body, ORANGE);
+				break;
+			case High:
+				DrawRectangleRec(player.health.body, GREEN);
+				break;
+			default:  // should render game-over screen here
+				break;
+		}
 		DrawRectangleRec(player.body, player.color);
 
 		// draw enemies
