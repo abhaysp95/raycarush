@@ -1,3 +1,13 @@
+// TODO:
+// * game enter screen
+// * game over screen
+// * adding image of player and enemy car
+// * improve algorithm, so that new enemies are generated near the player
+// * single player and multiplayer mode
+// * multiplayer mode: 2 ways
+//		- enemies are auto-generated and which player survives longest (3 at most)
+//		- players are enemies of each other (need further thought for this)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +31,7 @@ typedef struct Car {
 	Rectangle body;
 	Health health;
 	size_t score;
-	size_t speed;
+	float speed;
 	CarType car_type;
 	bool active;
 	Color color;
@@ -88,7 +98,9 @@ int main(void) {
 
 	// road strip
 	for (size_t i = 0; i < ROADSTRIPSZ; i++) {
-		RoadStrip road_strip = { .body = { (float)screen_width / 2 - 15, (float)(screen_height * (0.1 + (float)i / 4)), 30, 100 } };
+		RoadStrip road_strip = {
+			.body = { (float)screen_width / 2 - 15, (float)(screen_height * (0.1 + (float)i / 4)), 30, 100 },
+		};
 		road.road_strips[i] = road_strip;
 		road.road_strips[i].color = WHITE;
 	}
@@ -152,6 +164,7 @@ int main(void) {
 		// make the strip move
 		// TODO: make it smooth (if half the strip moves out of frame,
 		// that much strip should come in frame from opposite side)
+		player.speed += 0.02;
 		for (size_t i = 0; i < ROADSTRIPSZ; i++) {
 			road.road_strips[i].body.y += player.speed;
 			if (road.road_strips[i].body.y >= screen_height) {
@@ -173,7 +186,8 @@ int main(void) {
 		// make active enemy move
 		for (size_t i = 0; i < MAXENEMYCARSZ; i++) {
 			if (enemies[i].active) {
-				enemies[i].body.y += 5;
+				enemies[i].speed += 0.02;
+				enemies[i].body.y += enemies[i].speed;
 				if (enemies[i].body.y > screen_height) {
 					enemies[i].active = false;
 					enemies[i].body.y = 0;
