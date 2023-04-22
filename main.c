@@ -5,10 +5,12 @@
 
 #define ROADBORDERSZ 2
 #define ROADSTRIPSZ 4
+#define MAXENEMYCARSZ 10
 
 void update_score(char *str, size_t score);
 
 typedef enum CurrentHealth { Low, Medium, High } CurrentHealth;
+typedef enum CarType { Player, Enemy } CarType;
 
 typedef struct Health {
 	Rectangle body;
@@ -20,6 +22,9 @@ typedef struct Car {
 	Health health;
 	size_t score;
 	size_t speed;
+	CarType car_type;
+	bool active;
+	Color color;
 } Car;
 
 typedef struct RoadStrip {
@@ -49,7 +54,7 @@ int main(void) {
 
 	SetTargetFPS(60);
 
-	Car car = {
+	Car player = {
 		.body = { (float)screen_width / 2 - 25, screen_height * 0.9, 50, 50 },
 		.health = {
 			.body = { (float)screen_width / 2 - 25, screen_height * 0.88, 50, 10 },
@@ -57,6 +62,8 @@ int main(void) {
 		},
 		.score = 0,
 		.speed = 5,  // initial speed
+		.car_type = Player,
+		.color = SKYBLUE,
 	};
 
 	// score buffer
@@ -86,55 +93,95 @@ int main(void) {
 		road.road_strips[i].color = WHITE;
 	}
 
+	Car enemies[MAXENEMYCARSZ];
+	for (int i = 0; i < MAXENEMYCARSZ; i++) {
+		int xpos = GetRandomValue(screen_width * 0.2, screen_width * 0.8 - 50);
+		Car enemy = {
+			.body = { xpos, 0, 50, 50 },
+			.score = 0,
+			.speed = 5,
+			.car_type = Enemy,
+			.active = false,
+			.color = RED,
+		};
+		enemies[i] = enemy;
+	}
+
 	float strip_scrolling = 0.0;
+	int framecount = 0;
 
 	while (!WindowShouldClose()) {
 		// update
 		if (IsKeyDown(KEY_RIGHT)) {
-			car.body.x += 5.0f;
-			car.health.body.x += 5.0f;
-			if (car.body.x + car.body.width > screen_width * 0.8) {
-				car.body.x = screen_width * 0.8 - car.body.width;
-				car.health.body.x = car.body.x;
+			player.body.x += 5.0f;
+			player.health.body.x += 5.0f;
+			if (player.body.x + player.body.width > screen_width * 0.8) {
+				player.body.x = screen_width * 0.8 - player.body.width;
+				player.health.body.x = player.body.x;
 			}
 		}
 		if (IsKeyDown(KEY_LEFT)) {
-			car.body.x -= 5.0f;
-			car.health.body.x -= 5.0f;
-			if (car.body.x < screen_width * 0.2) {
-				car.body.x = screen_width * 0.2;
-				car.health.body.x = car.body.x;
+			player.body.x -= 5.0f;
+			player.health.body.x -= 5.0f;
+			if (player.body.x < screen_width * 0.2) {
+				player.body.x = screen_width * 0.2;
+				player.health.body.x = player.body.x;
 			}
 		}
 		if (IsKeyDown(KEY_UP)) {
-			car.body.y -= 5.0f;
-			car.health.body.y -= 5.0f;
-			if (car.health.body.y < 0) {
-				car.body.y = screen_height * 0.02;
-				car.health.body.y = 0;
+			player.body.y -= 5.0f;
+			player.health.body.y -= 5.0f;
+			if (player.health.body.y < 0) {
+				player.body.y = screen_height * 0.02;
+				player.health.body.y = 0;
 			}
 		}
 		if (IsKeyDown(KEY_DOWN)) {
-			car.body.y += 5.0f;
-			car.health.body.y += 5.0f;
-			if (car.body.y + car.body.height > screen_height) {
-				car.body.y = screen_height - car.body.height;
-				car.health.body.y = car.body.y - (screen_height * 0.02);
+			player.body.y += 5.0f;
+			player.health.body.y += 5.0f;
+			if (player.body.y + player.body.height > screen_height) {
+				player.body.y = screen_height - player.body.height;
+				player.health.body.y = player.body.y - (screen_height * 0.02);
 			}
 		}
 
 
-		update_score(score_buf, car.score);
+		update_score(score_buf, player.score);
 
 		// make the strip move
 		// TODO: make it smooth (if half the strip moves out of frame,
 		// that much strip should come in frame from opposite side)
 		for (size_t i = 0; i < ROADSTRIPSZ; i++) {
-			road.road_strips[i].body.y += car.speed;
+			road.road_strips[i].body.y += player.speed;
 			if (road.road_strips[i].body.y >= screen_height) {
 				road.road_strips[i].body.y = 0;
 			}
 		}
+
+		// update enemy cars
+		if (framecount >= 40) {
+			framecount = 0;
+			for (size_t i = 0; i < MAXENEMYCARSZ; i++) {
+				if (!enemies[i].active) {
+					enemies[i].active = true;
+					break;
+				}
+			}
+		}
+
+		// make active enemy move
+		for (size_t i = 0; i < MAXENEMYCARSZ; i++) {
+			if (enemies[i].active) {
+				enemies[i].body.y += 5;
+				if (enemies[i].body.y > screen_height) {
+					enemies[i].active = false;
+					enemies[i].body.y = 0;
+				}
+			}
+		}
+
+		framecount++;
+		printf("framecount: %d\n", framecount);
 
 		BeginDrawing();
 		ClearBackground(GOLD);
@@ -158,8 +205,16 @@ int main(void) {
 
 
 		// draw car & health
-		DrawRectangleRec(car.health.body, GREEN);
-		DrawRectangleRec(car.body, MAROON);
+		DrawRectangleRec(player.health.body, GREEN);
+		DrawRectangleRec(player.body, player.color);
+
+		// draw enemies
+		for (size_t i = 0; i < MAXENEMYCARSZ; i++) {
+			if (enemies[i].active) {
+				DrawRectangleRec(enemies[i].body, enemies[i].color);
+			}
+		}
+
 		EndDrawing();
 	}
 
