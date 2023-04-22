@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <raylib.h>
-#include <iostream>
 
 void update_score(char *str, size_t score);
 
