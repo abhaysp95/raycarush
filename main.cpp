@@ -1,5 +1,10 @@
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <raylib.h>
 #include <iostream>
+
+void update_score(char *str, size_t score);
 
 enum CurrentHealth { Low, Medium, High };
 
@@ -11,6 +16,7 @@ struct Health {
 struct Car {
 	Vector2 pos;
 	Health health;
+	size_t score;
 };
 
 int main(void) {
@@ -26,8 +32,12 @@ int main(void) {
 		.health = {
 			.pos = { (float)screen_width / 2, screen_height * 0.88 },
 			.state = CurrentHealth::High,
-		}
+		},
+		.score = 0,
 	};
+
+	// score buffer
+	char score_buf[32] = { '\0' };
 
 	// road strip
 	Rectangle road_strips[5] = {
@@ -57,9 +67,13 @@ int main(void) {
 			car.health.pos.y += 5.0f;
 		}
 
+		update_score(score_buf, car.score);
+		printf("%s\n", score_buf);
+
 		BeginDrawing();
 		ClearBackground(GOLD);
 		DrawText("RAYCARUSH", screen_width * 0.03, screen_height * 0.03, 25, DARKGRAY);
+		DrawText(score_buf, screen_width * 0.85, screen_height * 0.03, 25, DARKGRAY);
 		DrawLineEx({screen_width * 0.2, 0}, {screen_width * 0.2, screen_height}, 10.0, BLACK);
 		DrawLineEx({screen_width * 0.8, 0}, {screen_width * 0.8, screen_height}, 10.0, BLACK);
 		DrawRectangleV({screen_width * 0.2, 0}, { screen_width * 0.6, screen_height }, DARKGRAY);
@@ -74,4 +88,8 @@ int main(void) {
 	CloseWindow();
 
 	return 0;
+}
+
+void update_score(char *str, size_t score) {
+	snprintf(str, 32, "Score: %zu", score);
 }
