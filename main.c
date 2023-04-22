@@ -109,6 +109,7 @@ int main(void) {
 
 	float strip_scrolling = 0.0;
 	int framecount = 0;
+	int player_warmp_up = 40;
 
 	while (!WindowShouldClose()) {
 		// update
@@ -184,14 +185,26 @@ int main(void) {
 
 		// enemy collision
 		bool collision = false;
-		for (size_t i = 0; i < MAXENEMYCARSZ; i++) {
-			if ((player.body.x <= enemies[i].body.x + enemies[i].body.width)
-					|| (player.body.x + player.body.width >= enemies[i].body.x)
-					|| (player.body.y <= enemies[i].body.y + enemies[i].body.width)
-					|| (player.body.y + player.body.width >= enemies[i].body.y)) {
-				collision = true;
-				break;
+		if (player.health.state != Dead && !player_warmp_up) {
+			for (size_t i = 0; i < MAXENEMYCARSZ; i++) {
+				if (enemies[i].active) {
+					printf("enemies[%zu] {%f, %f}\n", i, enemies[i].body.x, enemies[i].body.y);
+					printf("player {%f, %f}\n", player.body.x, player.body.y);
+					// gap means "no collision"
+					if (player.body.x < enemies[i].body.x + enemies[i].body.width  // confirms only right-side collision
+							&& (player.body.x + player.body.width > enemies[i].body.x)  // also confirms left-side collision
+							&& (player.body.y < enemies[i].body.y + enemies[i].body.height)  // confirms only bottom side
+							&& (player.body.y + player.body.height > enemies[i].body.y)) {  // also confirms from top
+						collision = true;
+						player_warmp_up = 40;
+						break;
+					}
+				}
 			}
+		}
+
+		if (player_warmp_up > 0) {
+			player_warmp_up--;
 		}
 
 		if (collision) {
@@ -242,9 +255,11 @@ int main(void) {
 			case High:
 				DrawRectangleRec(player.health.body, GREEN);
 				break;
-			default:  // should render game-over screen here
+			case Dead:  // should render game-over screen here
+				DrawText("Dead", screen_width * 0.03, screen_height * 0.3, 25, DARKGRAY);
 				break;
 		}
+		DrawRectangleRec(player.body, player.color);
 		DrawRectangleRec(player.body, player.color);
 
 		// draw enemies
