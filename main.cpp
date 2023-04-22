@@ -40,13 +40,15 @@ int main(void) {
 	char score_buf[32] = { '\0' };
 
 	// road strip
-	Rectangle road_strips[5] = {
+	/* Rectangle road_strips[5] = {
 		{ (float)screen_width / 2 - 15, screen_height * 0.1, 30, 100 },
 		{ (float)screen_width / 2 - 15, screen_height * 0.3, 30, 100 },
 		{ (float)screen_width / 2 - 15, screen_height * 0.5, 30, 100 },
 		{ (float)screen_width / 2 - 15, screen_height * 0.7, 30, 100 },
 		{ (float)screen_width / 2 - 15, screen_height * 0.9, 30, 100 },
-	};
+	}; */
+
+	float strip_scrolling = 0.0;
 
 	while (!WindowShouldClose()) {
 		// update
@@ -68,7 +70,11 @@ int main(void) {
 		}
 
 		update_score(score_buf, car.score);
-		printf("%s\n", score_buf);
+
+		strip_scrolling += 10;
+		if (strip_scrolling >= screen_height) {
+			strip_scrolling = 0;
+		}
 
 		BeginDrawing();
 		ClearBackground(GOLD);
@@ -77,9 +83,14 @@ int main(void) {
 		DrawLineEx({screen_width * 0.2, 0}, {screen_width * 0.2, screen_height}, 10.0, BLACK);
 		DrawLineEx({screen_width * 0.8, 0}, {screen_width * 0.8, screen_height}, 10.0, BLACK);
 		DrawRectangleV({screen_width * 0.2, 0}, { screen_width * 0.6, screen_height }, DARKGRAY);
-		for (size_t i{}; i < 5; i++) {
+		// DrawRectangleRec({ (float)screen_width / 2 - 15, screen_height * 0.9, 30, 100 }, WHITE);
+		/* for (size_t i{}; i < 5; i++) {
 			DrawRectangleRec(road_strips[i], WHITE);
-		}
+		} */
+
+		DrawRectangleRec({ (float)screen_width / 2 - 15, strip_scrolling, 30,  100}, WHITE);
+
+
 		DrawRectangleV(car.health.pos, { 50, 10 }, GREEN);
 		DrawRectangleV(car.pos, { 50, 50 }, MAROON);
 		EndDrawing();
