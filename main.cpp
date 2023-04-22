@@ -9,14 +9,15 @@ void update_score(char *str, size_t score);
 enum CurrentHealth { Low, Medium, High };
 
 struct Health {
-	Vector2 pos;
+	Rectangle body;
 	CurrentHealth state;
 };
 
 struct Car {
-	Vector2 pos;
+	Rectangle body;
 	Health health;
 	size_t score;
+	size_t speed;
 };
 
 struct RoadStrip {
@@ -32,55 +33,71 @@ int main(void) {
 	SetTargetFPS(60);
 
 	Car car = {
-		.pos = { (float)screen_width / 2 - 25, screen_height * 0.9 },
+		.body = { (float)screen_width / 2 - 25, screen_height * 0.9, 50, 50 },
 		.health = {
-			.pos = { (float)screen_width / 2 - 25, screen_height * 0.88 },
+			.body = { (float)screen_width / 2 - 25, screen_height * 0.88, 50, 10 },
 			.state = CurrentHealth::High,
 		},
 		.score = 0,
+		.speed = 5,  // initial speed
 	};
 
 	// score buffer
 	char score_buf[32] = { '\0' };
 
 	// road strip
-	RoadStrip road_strips[5];
-	for (size_t i = 0; i < 5; i++) {
+	RoadStrip road_strips[4];
+	for (size_t i = 0; i < 4; i++) {
 		road_strips[i] = RoadStrip {
-			.body = { (float)screen_width / 2 - 15, (float)(screen_height * (0.1 + (float)i / 5)), 30, 100 },
-			// .pos = 0,
+			.body = { (float)screen_width / 2 - 15, (float)(screen_height * (0.1 + (float)i / 4)), 30, 100 },
 		};
 	}
-
 
 	float strip_scrolling = 0.0;
 
 	while (!WindowShouldClose()) {
 		// update
 		if (IsKeyDown(KEY_RIGHT)) {
-			car.pos.x += 5.0f;
-			car.health.pos.x += 5.0f;
+			car.body.x += 5.0f;
+			car.health.body.x += 5.0f;
+			if (car.body.x + car.body.width > screen_width * 0.8) {
+				car.body.x = screen_width * 0.8 - car.body.width;
+				car.health.body.x = car.body.x;
+			}
 		}
 		if (IsKeyDown(KEY_LEFT)) {
-			car.pos.x -= 5.0f;
-			car.health.pos.x -= 5.0f;
+			car.body.x -= 5.0f;
+			car.health.body.x -= 5.0f;
+			if (car.body.x < screen_width * 0.2) {
+				car.body.x = screen_width * 0.2;
+				car.health.body.x = car.body.x;
+			}
 		}
 		if (IsKeyDown(KEY_UP)) {
-			car.pos.y -= 5.0f;
-			car.health.pos.y -= 5.0f;
+			car.body.y -= 5.0f;
+			car.health.body.y -= 5.0f;
+			if (car.health.body.y < 0) {
+				car.body.y = screen_height * 0.02;
+				car.health.body.y = 0;
+			}
 		}
 		if (IsKeyDown(KEY_DOWN)) {
-			car.pos.y += 5.0f;
-			car.health.pos.y += 5.0f;
+			car.body.y += 5.0f;
+			car.health.body.y += 5.0f;
+			if (car.body.y + car.body.height > screen_height) {
+				car.body.y = screen_height - car.body.height;
+				car.health.body.y = car.body.y - (screen_height * 0.02);
+			}
 		}
 
 
 		update_score(score_buf, car.score);
 
 		// make the strip move
-		// strip_scrolling += 10;
-		for (size_t i{}; i < 5; i++) {
-			road_strips[i].body.y += 10;
+		// TODO: make it smooth (if half the strip moves out of frame,
+		// that much strip should come in frame from opposite side)
+		for (size_t i{}; i < 4; i++) {
+			road_strips[i].body.y += car.speed;
 			if (road_strips[i].body.y >= screen_height) {
 				road_strips[i].body.y = 0;
 			}
@@ -109,8 +126,8 @@ int main(void) {
 
 
 		// draw car & health
-		DrawRectangleV(car.health.pos, { 50, 10 }, GREEN);
-		DrawRectangleV(car.pos, { 50, 50 }, MAROON);
+		DrawRectangleRec(car.health.body, GREEN);
+		DrawRectangleRec(car.body, MAROON);
 		EndDrawing();
 	}
 
