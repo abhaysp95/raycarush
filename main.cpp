@@ -30,7 +30,7 @@ int main(void) {
 	Car car = {
 		.pos = { (float)screen_width / 2, screen_height * 0.9 },
 		.health = {
-			.pos = { (float)screen_width / 2, screen_height * 0.88 },
+			.pos = { (float)screen_width / 2 - 25, screen_height * 0.88 },
 			.state = CurrentHealth::High,
 		},
 		.score = 0,
@@ -69,8 +69,10 @@ int main(void) {
 			car.health.pos.y += 5.0f;
 		}
 
+
 		update_score(score_buf, car.score);
 
+		// make the strip move
 		strip_scrolling += 10;
 		if (strip_scrolling >= screen_height) {
 			strip_scrolling = 0;
@@ -78,11 +80,18 @@ int main(void) {
 
 		BeginDrawing();
 		ClearBackground(GOLD);
+
+		// draw game name and score
 		DrawText("RAYCARUSH", screen_width * 0.03, screen_height * 0.03, 25, DARKGRAY);
 		DrawText(score_buf, screen_width * 0.85, screen_height * 0.03, 25, DARKGRAY);
+
+		// draw road border
 		DrawLineEx({screen_width * 0.2, 0}, {screen_width * 0.2, screen_height}, 10.0, BLACK);
 		DrawLineEx({screen_width * 0.8, 0}, {screen_width * 0.8, screen_height}, 10.0, BLACK);
+
+		// draw road
 		DrawRectangleV({screen_width * 0.2, 0}, { screen_width * 0.6, screen_height }, DARKGRAY);
+
 		// DrawRectangleRec({ (float)screen_width / 2 - 15, screen_height * 0.9, 30, 100 }, WHITE);
 		/* for (size_t i{}; i < 5; i++) {
 			DrawRectangleRec(road_strips[i], WHITE);
@@ -91,6 +100,7 @@ int main(void) {
 		DrawRectangleRec({ (float)screen_width / 2 - 15, strip_scrolling, 30,  100}, WHITE);
 
 
+		// draw car & health
 		DrawRectangleV(car.health.pos, { 50, 10 }, GREEN);
 		DrawRectangleV(car.pos, { 50, 50 }, MAROON);
 		EndDrawing();
