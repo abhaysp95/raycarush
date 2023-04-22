@@ -1,27 +1,45 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <raylib.h>
+
+#define ROADBORDERSZ 2
+#define ROADSTRIPSZ 4
 
 void update_score(char *str, size_t score);
 
-enum CurrentHealth { Low, Medium, High };
+typedef enum CurrentHealth { Low, Medium, High } CurrentHealth;
 
-struct Health {
+typedef struct Health {
 	Rectangle body;
 	CurrentHealth state;
-};
+} Health;
 
-struct Car {
+typedef struct Car {
 	Rectangle body;
 	Health health;
 	size_t score;
 	size_t speed;
-};
+} Car;
 
-struct RoadStrip {
+typedef struct RoadStrip {
 	Rectangle body;
-};
+	Color color;
+} RoadStrip;
+
+typedef struct RoadBorder {
+	Vector2 start;
+	Vector2 end;
+	float width;
+	Color color;
+} RoadBorder;
+
+typedef struct Road {
+	RoadStrip road_strips[ROADSTRIPSZ];
+	RoadBorder road_borders[ROADBORDERSZ];
+	Rectangle body;
+	Color color;
+} Road;
 
 int main(void) {
 	const int screen_height = 720;
@@ -35,7 +53,7 @@ int main(void) {
 		.body = { (float)screen_width / 2 - 25, screen_height * 0.9, 50, 50 },
 		.health = {
 			.body = { (float)screen_width / 2 - 25, screen_height * 0.88, 50, 10 },
-			.state = CurrentHealth::High,
+			.state = High
 		},
 		.score = 0,
 		.speed = 5,  // initial speed
@@ -44,12 +62,28 @@ int main(void) {
 	// score buffer
 	char score_buf[32] = { '\0' };
 
+	Road road = {
+		.body = { (float)screen_width * 0.2, 0, (float)screen_width * 0.6, screen_height },
+		.color = DARKGRAY,
+		.road_borders =  {
+			{
+				.start ={ .x = screen_width * 0.2, .y = 0 },
+				.end = { .x = screen_width * 0.2, .y = screen_height },
+				.width = 10,
+			},
+			{
+				.start ={ .x = screen_width * 0.8, .y = 0 },
+				.end ={ .x = screen_width * 0.8, .y = screen_height },
+				.width = 10,
+			}
+		},
+	};
+
 	// road strip
-	RoadStrip road_strips[4];
-	for (size_t i = 0; i < 4; i++) {
-		road_strips[i] = RoadStrip {
-			.body = { (float)screen_width / 2 - 15, (float)(screen_height * (0.1 + (float)i / 4)), 30, 100 },
-		};
+	for (size_t i = 0; i < ROADSTRIPSZ; i++) {
+		RoadStrip road_strip = { .body = { (float)screen_width / 2 - 15, (float)(screen_height * (0.1 + (float)i / 4)), 30, 100 } };
+		road.road_strips[i] = road_strip;
+		road.road_strips[i].color = WHITE;
 	}
 
 	float strip_scrolling = 0.0;
@@ -95,10 +129,10 @@ int main(void) {
 		// make the strip move
 		// TODO: make it smooth (if half the strip moves out of frame,
 		// that much strip should come in frame from opposite side)
-		for (size_t i{}; i < 4; i++) {
-			road_strips[i].body.y += car.speed;
-			if (road_strips[i].body.y >= screen_height) {
-				road_strips[i].body.y = 0;
+		for (size_t i = 0; i < ROADSTRIPSZ; i++) {
+			road.road_strips[i].body.y += car.speed;
+			if (road.road_strips[i].body.y >= screen_height) {
+				road.road_strips[i].body.y = 0;
 			}
 		}
 
@@ -110,18 +144,17 @@ int main(void) {
 		DrawText(score_buf, screen_width * 0.85, screen_height * 0.03, 25, DARKGRAY);
 
 		// draw road border
-		DrawLineEx({screen_width * 0.2, 0}, {screen_width * 0.2, screen_height}, 10.0, BLACK);
-		DrawLineEx({screen_width * 0.8, 0}, {screen_width * 0.8, screen_height}, 10.0, BLACK);
-
-		// draw road
-		DrawRectangleV({screen_width * 0.2, 0}, { screen_width * 0.6, screen_height }, DARKGRAY);
-
-		// DrawRectangleRec({ (float)screen_width / 2 - 15, screen_height * 0.9, 30, 100 }, WHITE);
-		for (size_t i{}; i < 5; i++) {
-			DrawRectangleRec(road_strips[i].body, WHITE);
+		for (int i = 0; i < ROADBORDERSZ; i++) {
+			DrawLineEx(road.road_borders[i].start, road.road_borders[i].end, road.road_borders[i].width, BLACK);
 		}
 
-		// DrawRectangleRec({ (float)screen_width / 2 - 15, strip_scrolling, 30,  100}, WHITE);
+		// draw road
+		DrawRectangleRec(road.body, road.color);
+
+		// draw road strips
+		for (size_t i = 0; i < 5; i++) {
+			DrawRectangleRec(road.road_strips[i].body, road.road_strips[i].color);
+		}
 
 
 		// draw car & health
